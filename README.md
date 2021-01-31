@@ -27,3 +27,4 @@ wide variety of embedded applications where a high visibility text
 display is required that will operate in a wide variety of lighting 
 conditions.
 
+
