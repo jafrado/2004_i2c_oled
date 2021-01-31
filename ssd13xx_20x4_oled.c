@@ -3,7 +3,7 @@
  * 
  * This module implements Text output and positioning for the Wide.HK
  * 20x4 OLED Character display found online at the listing shown on the
- * <A HREF="http://www.ebay.com/itm/162156498430"> Wide.HK Ebay Store</a>
+ * <A HREF="https://www.ebay.com/itm/IIC-I2C-2004-20x4-Green-OLED-Module-Display-For-Arduino-PIC-AVR-ARM/162406508569"> Wide.HK Ebay Store</a>
  * 
  * Reference:
  * 
@@ -81,7 +81,7 @@ void lcd_write(const unsigned char *data, int len)
  * This routine clears the display memory
  * 
  */
-inline void lcd_cls(void)
+void lcd_cls(void)
 { 
 	ssd13xx_command(0x1);    
 }
@@ -108,12 +108,12 @@ void lcd_goto(int x, int y)
  * 
  * Each font is either 5x8 or 5x6 bits
  */
-inline void set_cgram_addr(char addr)
+void set_cgram_addr(char addr)
 {
 	ssd13xx_command(0x40 + addr);  
 }
 
-inline void set_dram_addr(char addr)
+void set_dram_addr(char addr)
 {
 	ssd13xx_command(0x80 + addr);  
 }

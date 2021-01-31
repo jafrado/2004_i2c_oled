@@ -3,7 +3,7 @@
  * 
  * This module implements Text output and positioning for the Wide.HK
  * 20x4 OLED Character display found online at the listing shown on the
- * <A HREF="http://www.ebay.com/itm/162156498430"> Wide.HK Ebay Store</a>
+ * <A HREF="https://www.ebay.com/itm/IIC-I2C-2004-20x4-Green-OLED-Module-Display-For-Arduino-PIC-AVR-ARM/162406508569"> Wide.HK Ebay Store</a>
  * 
  * Reference:
  * 
@@ -23,6 +23,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <errno.h>
+#include "ssd13xx_20x4_oled.h"
+
+extern int serial_open(char* device, int highspeed) ; /* i2c.c */
+extern void ms_delay(unsigned int usecs); /* time.c */
 
 int i2c_fd = -1;
 
