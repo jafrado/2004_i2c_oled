@@ -78,6 +78,10 @@ static ssize_t lcd20x4_write(FAR struct file *filep, FAR const char *buffer,
 static int     lcd20x4_ioctl(FAR struct file *filep, int cmd,
                             unsigned long arg);
 
+/* Hardware functions */
+void lcd_goto(FAR struct lcd20x4_dev_s *priv, int x, int y);
+void lcd_cls(FAR struct lcd20x4_dev_s *priv);
+void lcd_puts(FAR struct lcd20x4_dev_s *priv, const char *str);
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -107,9 +111,6 @@ static const struct file_operations g_fops =
  ****************************************************************************/
 static int lcd20x4_open(FAR struct file *filep)
 {
-	FAR struct inode *inode        = filep->f_inode;
-	FAR struct lcd20x4_dev_s *priv  = inode->i_private;
-	sninfo("open");
 	return OK;
 }
 
@@ -122,9 +123,6 @@ static int lcd20x4_open(FAR struct file *filep)
  ****************************************************************************/
 static int lcd20x4_close(FAR struct file *filep)
 {
-	FAR struct inode *inode        = filep->f_inode;
-	FAR struct lcd20x4_dev_s *priv  = inode->i_private;
-	
 	return OK;
 }
 
@@ -138,9 +136,6 @@ static int lcd20x4_close(FAR struct file *filep)
 static ssize_t lcd20x4_read(FAR struct file *filep, FAR char *buffer,
                            size_t buflen)
 {
-	FAR struct inode *inode        = filep->f_inode;
-	FAR struct lcd20x4_dev_s *priv  = inode->i_private;
-	sninfo("read");	
 	return 0;
 }
 
@@ -161,7 +156,7 @@ static ssize_t lcd20x4_write(FAR struct file *filep, FAR const char *buffer,
  * Name: lcd20x4_ioctl
  *
  * Description:
- *   The standard ioctl method.
+ *   The standard ioctl method.void lcd_puts(FAR struct lcd20x4_dev_s *priv, const char *str)
  *
  ****************************************************************************/
 static int lcd20x4_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
@@ -169,7 +164,6 @@ static int lcd20x4_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 	FAR struct inode        *inode = filep->f_inode;
 	FAR struct lcd20x4_dev_s *priv  = inode->i_private;
 	int                      ret   = OK;
-	struct slcd_curpos_s position;
 	FAR struct slcd_curpos_s *data = NULL;
 		
 	/* Aquire the semaphore before the data is copied */	
@@ -257,6 +251,8 @@ int ssd13xx_write(FAR struct lcd20x4_dev_s *priv, uint8_t addr, uint8_t regval)
 
 
 #define OLED_SADDR         0x3c /* SSD1311/OLED Module Slave address */
+/* EA SSD1311 - 0x78, 0x7C */
+//#define OLED_SADDR         0x78 /* SSD1311/OLED Module Slave address */
 #define SSD1311_CMD_REG    0x80 /* Command Register                  */
 #define SSD1311_DATA_REG   0x40 /* Data Register                     */
 
@@ -452,7 +448,6 @@ void lcd_define_nav_symbols(FAR struct lcd20x4_dev_s *priv)
 
 void lcd_define_vbar_symbol(FAR struct lcd20x4_dev_s *priv)
 {
-	int i;
 	
 	/*
 	 *  Airplane Symbol
@@ -556,6 +551,9 @@ void lcd_define_vbar_symbol(FAR struct lcd20x4_dev_s *priv)
 void ssd13xx_oled_20x4_init(FAR struct lcd20x4_dev_s *priv)
 {
 
+	/* There are three sets of command set in SSD1311: Fundamental Command Set, Extended Command Set and OLED
+	   Command Set. These three command sets can be selected by setting logic bits IS, RE and SD accordingly
+	*/
 	ssd13xx_command(priv, 0x80);
 	ssd13xx_command(priv, 0x2A);  /* **** Set "RE"=1  00101010B */
 	ssd13xx_command(priv, 0x71);
@@ -570,7 +568,6 @@ void ssd13xx_oled_20x4_init(FAR struct lcd20x4_dev_s *priv)
 	ssd13xx_command(priv, 0xD5);
 	ssd13xx_command(priv, 0x70);
 	ssd13xx_command(priv, 0x78); /* **** Set "SD"=0            */
-	
 	//ssd13xx_command(priv, 0x08);
 	/* **** Set 5-dot, 3 or 4 line(0x09), 1 or 2 line(0x08) */
 	ssd13xx_command(priv, 0x09); 
@@ -580,19 +577,28 @@ void ssd13xx_oled_20x4_init(FAR struct lcd20x4_dev_s *priv)
 	ssd13xx_command(priv, 0x72);
 	ssd13xx_command(priv, 0xC0);
 	ssd13xx_command(priv, 0x01);
+
+	
+	/**** CGROM/CGRAM Management ***/
+	ssd13xx_command(priv, 0x28);   /* **** Set "IS"=0 , "RE" =0 /28 */
+	ssd13xx_command(priv, 0x78);   /* **** Set "SD"=0            */	
+	ssd13xx_command(priv, 0x2A);   /* **** Set "RE"=1  00101010B */	
+	ssd13xx_command(priv, 0x72);   /* **** Set ROM */
+	//lcd_puts("{|}") => aon (accented, Latin)
+	ssd13xx_data(priv, 0x00); /*  **** Set ROM A and 8 CGRAM */
+	
+        //lcd_puts("{|}") => {|}
+	//ssd13xx_data(priv, 0x05);      /*  **** Set ROM B and 8 CGRAM */
+	
+	//lcd_puts("{|}") => {|}
+	//ssd13xx_data(priv, 0x09);      /*  **** Set ROM C and 8 CGRAM */
 	
 	/**** Set OLED Characterization ***/
 	ssd13xx_command(priv, 0x2A);   /* **** Set "RE"=1  */
 	ssd13xx_command(priv, 0x79);   /* **** Set "SD"=1 */
-
-	/**** CGROM/CGRAM Management ***/
-#if 0	
-	ssd13xx_command(priv, 0x72); /* **** Set ROM */
-	ssd13xx_command(priv, 0x00); /*  **** Set ROM A and 8 CGRAM */
-#endif
 	
-	ssd13xx_command(priv, 0xDC);    /* **** Set ROM */
-	ssd13xx_command(priv, 0x00);    /* **** Set ROM A and 8 CGRAM */
+	ssd13xx_command(priv, 0xDC);    /* **** Function Select C */
+	ssd13xx_command(priv, 0x00);    /* **** Write 0 to all GPIO's */
 	
 	ssd13xx_command(priv, 0xDA);    /* **** Set Seg Pins HW Config */
 	ssd13xx_command(priv, 0x10);   
@@ -660,8 +666,8 @@ int lcd20x4_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
 {
 	FAR struct lcd20x4_dev_s *priv;
 	int ret = 0;
-	char ubuf[40];
-	
+	unsigned char ubuf[40];
+
 	/* Sanity check */
 	DEBUGASSERT(i2c != NULL);
 
@@ -675,7 +681,7 @@ int lcd20x4_register(FAR const char *devpath, FAR struct i2c_master_s *i2c)
 
 	priv->i2c   = i2c;
 	priv->addr  = OLED_SADDR;
-	
+	nxsem_init(&priv->datasem, 0, 1);	
 	/* Register the character driver */
 	ret = register_driver(devpath, &g_fops, 0666, priv);
 	if (ret < 0)
