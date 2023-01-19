@@ -5,7 +5,7 @@ Display Driver for the Wide.HK 20x4 SSD1311 Character mode OLED display
 
 This display library implements output and positioning along with
 custom character sets for the Wide.HK 20x4 OLED Display which can be
-purchased online at the <A HREF="https://www.ebay.com/itm/IIC-I2C-2004-20x4-Green-OLED-Module-Display-For-Arduino-PIC-AVR-ARM/162406508569"> Wide.HK Ebay Store</a>
+purchased online at the <A HREF="http://www.wide.hk/index.php?route=product/product&path=24&product_id=55"> Wide.HK Store</a>
 
 To use with a Raspberry-Pi (I used a Zero); connect the
 SCL/SDA/3V3/GND pins (I used I2C1) and copy the source code to your system. 
